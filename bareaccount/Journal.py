@@ -62,7 +62,21 @@ class journal:
 
         
         return name
-           
+
+    def clear(self,journal,reset=True):
+        self.conn.execute('DELETE FROM {};'.format(journal))
+        self.conn.commit()
+        print("Journal '{}' cleared.".format(journal))
+        #sql reset id to 0
+        if reset == True:
+            self.conn.execute('delete from sqlite_sequence where name="{}";'.format(journal)) 
+        self.conn.commit()
+        
+    def history(self,journal):
+        df = pd.read_sql_query("SELECT * FROM {}".format(journal), self.conn)
+        return df
+
+
     def transaction(self,journal,credit,debit):
         balance = self.getbalance(journal)
         #print("balance: " + str(balance))
