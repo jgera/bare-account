@@ -7,39 +7,39 @@ class journal:
     def __init__(self, db):
         self.conn = sqlite3.connect(db + '.db')
 
-    def show(self,account):
+    def show(self,journal):
         try:
-            df = pd.read_sql_query("SELECT * FROM {}".format(account), self.conn)
+            df = pd.read_sql_query("SELECT * FROM {}".format(journal), self.conn)
             return df
         except:
-            print("no such table")
+            print("no such journal")
         
-    def getbalance(self,account):
+    def getbalance(self,journal):
         try:
-            cursor = self.conn.execute("SELECT balance FROM {0} WHERE ID = (SELECT MAX(ID)  FROM {0});".format(account))
+            cursor = self.conn.execute("SELECT balance FROM {0} WHERE ID = (SELECT MAX(ID)  FROM {0});".format(journal))
             return cursor.fetchall()[0][0]
         except:
             return 0
     
-    def listAccounts(self):
+    def listJournals(self):
         c = self.conn.cursor()
         c.execute('SELECT name FROM sqlite_master WHERE type="table"')
-        accounts = []
+        journals = []
         for a in c.fetchall():
             #print(a[0])
-            accounts.append(a[0])
+            journals.append(a[0])
             
-        accounts.remove('sqlite_sequence')
-        return accounts
+        journals.remove('sqlite_sequence')
+        return journals
     
-    def deleteAccount(self,name):
+    def deleteJournal(self,name):
         self.conn.execute('DROP TABLE IF EXISTS {};'.format(name))
-        print("Account '{}' deleted.".format(name))
+        print("Journal '{}' deleted.".format(name))
         
     
-    def createAccount(self,name,drop=False):
+    def createJournal(self,name,drop=False):
         if name == "":
-            print("Account name can't be empty")
+            print("Journal name can't be empty")
             return None
         
         tables = self.conn.execute("SELECT name FROM sqlite_master WHERE name='{}';".format(name))
@@ -47,10 +47,10 @@ class journal:
        
         if len(tables.fetchall()) != 0: 
             if drop == True:
-                print("Account '{}' already exists, dropping.".format(name))     
+                print("Journal '{}' already exists, dropping.".format(name))     
                 self.conn.execute('DROP TABLE IF EXISTS {};'.format(name))
             else:
-                print("Account '{}' already exists.".format(name))     
+                print("Journal '{}' already exists.".format(name))     
                 return name       
         
         self.conn.execute('''CREATE TABLE {} (ID INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -58,22 +58,22 @@ class journal:
                                         debit real not null DEFAULT 0.0,
                                         balance real not null ) '''.format(name))
         self.conn.commit()
-        print("Account '{}' Created.".format(name))           
+        print("Journal '{}' Created.".format(name))           
 
         
         return name
            
-    def transaction(self,account,credit,debit):
-        balance = self.getbalance(account)
+    def transaction(self,journal,credit,debit):
+        balance = self.getbalance(journal)
         #print("balance: " + str(balance))
         balance= balance+credit-debit
         #print("after balance: " + str(balance))
         tx = (credit,debit,balance)
-        q = "INSERT INTO {} (credit,debit,balance) VALUES (?, ?, ? );".format(account)
+        q = "INSERT INTO {} (credit,debit,balance) VALUES (?, ?, ? );".format(journal)
         self.conn.execute(q,tx)
         self.conn.commit()
         
-        cursor = self.conn.execute("SELECT balance FROM {0} WHERE ID = (SELECT MAX(ID)  FROM {0});".format(account))
+        cursor = self.conn.execute("SELECT balance FROM {0} WHERE ID = (SELECT MAX(ID)  FROM {0});".format(journal))
         
     def close(self):
         self.conn.close()
