@@ -85,9 +85,7 @@ class journal:
         tx = (credit,debit,balance)
         q = "INSERT INTO {} (credit,debit,balance) VALUES (?, ?, ? );".format(journal)
         self.conn.execute(q,tx)
-        self.conn.commit()
-        
-        cursor = self.conn.execute("SELECT balance FROM {0} WHERE ID = (SELECT MAX(ID)  FROM {0});".format(journal))
-        
+        #self.conn.commit()
+       
     def close(self):
         self.conn.close()
