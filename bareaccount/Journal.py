@@ -3,9 +3,10 @@ import pandas as pd
 import os
 
 class journal:
-    
-    def __init__(self, db):
+    log = False
+    def __init__(self, db , log = False):
         self.conn = sqlite3.connect(db + '.db')
+        self.log = log
 
     def show(self,journal):
         try:
@@ -34,7 +35,7 @@ class journal:
     
     def deleteJournal(self,name):
         self.conn.execute('DROP TABLE IF EXISTS {};'.format(name))
-        print("Journal '{}' deleted.".format(name))
+        print("Journal '{}' deleted.".format(name)) if self.log else None
         
     
     def createJournal(self,name,drop=False):
@@ -44,13 +45,12 @@ class journal:
         
         tables = self.conn.execute("SELECT name FROM sqlite_master WHERE name='{}';".format(name))
 
-       
         if len(tables.fetchall()) != 0: 
             if drop == True:
-                print("Journal '{}' already exists, dropping.".format(name))     
+                print("Journal '{}' already exists, dropping.".format(name))  if self.log else None  
                 self.conn.execute('DROP TABLE IF EXISTS {};'.format(name))
             else:
-                print("Journal '{}' already exists.".format(name))     
+                print("Journal '{}' already exists.".format(name)) if self.log else None 
                 return name       
         
         self.conn.execute('''CREATE TABLE {} (ID INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -58,7 +58,7 @@ class journal:
                                         debit real not null DEFAULT 0.0,
                                         balance real not null ) '''.format(name))
         self.conn.commit()
-        print("Journal '{}' Created.".format(name))           
+        print("Journal '{}' Created.".format(name)) if self.log else None          
 
         
         return name
@@ -66,7 +66,7 @@ class journal:
     def clear(self,journal,reset=True):
         self.conn.execute('DELETE FROM {};'.format(journal))
         self.conn.commit()
-        print("Journal '{}' cleared.".format(journal))
+        print("Journal '{}' cleared.".format(journal)) if self.log else None
         #sql reset id to 0
         if reset == True:
             self.conn.execute('delete from sqlite_sequence where name="{}";'.format(journal)) 
@@ -86,6 +86,6 @@ class journal:
         q = "INSERT INTO {} (credit,debit,balance) VALUES (?, ?, ? );".format(journal)
         self.conn.execute(q,tx)
         #self.conn.commit()
-       
+        
     def close(self):
         self.conn.close()
